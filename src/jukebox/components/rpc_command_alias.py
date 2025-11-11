@@ -48,6 +48,14 @@ cmd_alias_definitions = {
         'method': 'pause',
         'note': "This is what you want as card removal action for place capable readers",
         'ignore_card_removal_action': True},
+    'stop': {
+        'package': 'player',
+        'plugin': 'ctrl',
+        'method': 'stop',
+        'note': """Stop playback entirely, do not just pause it. This is useful if you have
+both RFID cards and GPIO buttons, so you don't accidentally continue
+playing without the card present.""",
+        'ignore_card_removal_action': True},
     'next_song': {
         'package': 'player',
         'plugin': 'ctrl',
