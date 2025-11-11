@@ -22,8 +22,10 @@ _jukebox_core_install_os_dependencies() {
 }
 
 _jukebox_core_install_python_requirements() {
+  print_lc "  Remove faulty system gpio package"
+  sudo apt remove python3-rpi.gpio
+  
   print_lc "  Install Python requirements"
-
   cd "${INSTALLATION_PATH}"  || exit_on_error
 
   python3 -m venv $VIRTUAL_ENV
