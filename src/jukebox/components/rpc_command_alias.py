@@ -97,6 +97,13 @@ playing without the card present.""",
         'method': 'change_volume',
         'ignore_card_removal_action': True,
         'ignore_same_id_delay': True},
+    'toggle_mute': {
+        'note': "Toggle mute on/off",
+        'package': 'volume',
+        'plugin': 'ctrl',
+        'method': 'toggle_mute',
+        'ignore_card_removal_action': True,
+        'ignore_same_id_delay': True},
     'set_soft_max_volume': {
         'package': 'volume',
         'plugin': 'ctrl',

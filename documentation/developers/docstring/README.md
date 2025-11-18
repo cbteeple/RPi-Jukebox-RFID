@@ -373,6 +373,7 @@
     * [change\_volume](#components.volume.PulseVolumeControl.change_volume)
     * [get\_mute](#components.volume.PulseVolumeControl.get_mute)
     * [mute](#components.volume.PulseVolumeControl.mute)
+    * [toggle\_mute](#components.volume.PulseVolumeControl.toggle_mute)
     * [set\_output](#components.volume.PulseVolumeControl.set_output)
     * [set\_soft\_max\_volume](#components.volume.PulseVolumeControl.set_soft_max_volume)
     * [get\_soft\_max\_volume](#components.volume.PulseVolumeControl.get_soft_max_volume)
@@ -5834,6 +5835,18 @@ def mute(mute=True)
 ```
 
 Set mute status for the currently active output
+
+
+<a id="components.volume.PulseVolumeControl.toggle_mute"></a>
+
+#### toggle\_mute
+
+```python
+@plugin.tag
+def toggle_mute()
+```
+
+Toggle mute status for the currently active output
 
 
 <a id="components.volume.PulseVolumeControl.set_output"></a>
