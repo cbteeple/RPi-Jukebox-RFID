@@ -35,3 +35,26 @@ class PlayContentCallbacks(Generic[STATE], CallbackHandler):
     def run_callbacks(self, folder: str, state: STATE):
         """:meta private:"""
         super().run_callbacks(folder, state)
+
+
+class PlayStateCallbacks(CallbackHandler):
+    """
+    Callbacks are executed in various play functions
+    """
+
+    def register(self, func: Callable[[str], None]):
+        """
+        Add a new callback function :attr:`func`.
+
+        Callback signature is
+
+        .. py:function:: func(state: str)
+            :noindex:
+
+        :param state: indicator of the state inside the calling
+        """
+        super().register(func)
+
+    def run_callbacks(self, state: str):
+        """:meta private:"""
+        super().run_callbacks(state)

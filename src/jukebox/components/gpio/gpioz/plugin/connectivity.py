@@ -94,6 +94,28 @@ def register_status_led_callback(device):
     components.gpio.gpioz.plugin.service_is_running_callbacks.register(
         _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
 
+def register_play_led_callback(device):
+    """
+    Turn LED on when music is playing
+
+    Compatible devices:
+
+    * :class:`components.gpio.gpioz.core.output_devices.LED`
+    * :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+    * :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+    """
+
+    def set_status_led(state):
+        if state > 1:
+            device.flash(on_time=0.1, off_time=0.1, n=1, background=True)
+        elif state == 1:
+            device.on()
+        else:
+            device.off()
+
+    components.volume.pulse_control.on_output_change_callbacks.register(
+        _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
+
 
 def register_status_buzzer_callback(device):
     """

@@ -512,6 +512,7 @@ class PulseVolumeControl:
     @plugin.tag
     def change_volume(self, step: int):
         """Increase/decrease the volume by step for the currently active output"""
+        logger.debug(f"Changing Volume: {step}")
         with pulse_monitor as pulse:
             volume, mute = self._get_volume_and_mute(pulse)
             volume += step

@@ -81,6 +81,8 @@ sudo -u mpd speaker-test -t wav -c 2
 # Toggle (und 2nd Swipe generell) ist immer vom Status des Zielsystems abhängig und kann damit nur vom Zielsystem geändert
 # werden. Bei Wifi also braucht man 3 Funktionen: on / off / toggle. Toggle ist dann first swipe / second swipe
 
+from collections import deque
+import inspect
 import os
 import mpd
 import threading
@@ -98,7 +100,7 @@ import jukebox.playlistgenerator as playlistgenerator
 import misc
 
 from jukebox.NvManager import nv_manager
-from .playcontentcallback import PlayContentCallbacks, PlayCardState
+from .playcontentcallback import PlayContentCallbacks, PlayCardState, PlayStateCallbacks
 from .coverart_cache_manager import CoverartCacheManager
 
 logger = logging.getLogger('jb.PlayerMPD')
@@ -169,6 +171,7 @@ class PlayerMPD:
         logger.info(f"Connected to MPD Version: {self.mpd_client.mpd_version}")
 
         self.current_folder_status = {}
+        self.last_commands = deque(maxlen=100)
         if not self.music_player_status:
             self.music_player_status['player_status'] = {}
             self.music_player_status['audio_folder_status'] = {}
@@ -277,6 +280,41 @@ class PlayerMPD:
         except KeyError:
             pass
         publishing.get_publisher().send('playerstatus', self.mpd_status)
+            
+        if self.mpd_status['state'] == 'stop':
+            # Run pause_led_off_callback()
+            # Run next_led_off_callback()
+            # Run prev_led_off_callback()
+            pass
+
+        # If any important states have changed, run the callbacks.
+        logger.debug(f"{self.last_commands}")
+        else:
+            if 'toggle' in self.last_commands:
+                if self.mpd_status['state'] == 'pause':
+                    # Run pause_led_blink_callback()
+                    pass
+                elif self.mpd_status['state'] == 'play':
+                    # Run pause_led_on_callback()
+                    pass
+            elif 'play' in self.last_commands:
+                # Run pause_led_on_callback()
+                pass
+            elif 'pause' in self.last_commands:
+                # Run pause_led_blink_callback()
+                pass
+
+            if 'next' in in self.last_commands:
+                # Run next_led_blink 3_times_callback()
+                pass
+
+            if 'prev' in self.last_commands
+                # Run prev_led_blink 3_times_callback()
+                pass
+
+        # Clear the deque
+        self.last_commands.clear()
+
 
     # MPD can play absolute paths but can find songs in its database only by relative path
     # This function aims to prepare the song_url accordingly
@@ -306,11 +344,13 @@ class PlayerMPD:
 
     @plugs.tag
     def play(self):
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
         with self.mpd_lock:
             self.mpd_client.play()
 
     @plugs.tag
     def stop(self):
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
         with self.mpd_lock:
             self.mpd_client.stop()
 
@@ -321,17 +361,20 @@ class PlayerMPD:
         This is what you want as card removal action: pause the playback, so it can be resumed when card is placed
         on the reader again. What happens on re-placement depends on configured second swipe option
         """
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
         with self.mpd_lock:
             self.mpd_client.pause(state)
 
     @plugs.tag
     def prev(self):
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
         logger.debug("Prev")
         with self.mpd_lock:
             self.mpd_client.previous()
 
     @plugs.tag
     def next(self):
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
         """Play next track in current playlist"""
         logger.debug("Next")
         with self.mpd_lock:
@@ -365,6 +408,9 @@ class PlayerMPD:
     @plugs.tag
     def toggle(self):
         """Toggle pause state, i.e. do a pause / resume depending on current state"""
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
+
+        play_state_callbacks.run_callbacks('pause')
         with self.mpd_lock:
             self.mpd_client.pause()
 
@@ -727,6 +773,7 @@ player_ctrl: PlayerMPD
 #: - See :class:`PlayCardState`
 #: See :class:`PlayContentCallbacks`
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
+play_state_callbacks: PlayStateCallbacks
 
 
 @plugs.initialize
@@ -737,6 +784,9 @@ def initialize():
 
     global play_card_callbacks
     play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=player_ctrl.mpd_lock)
+
+   global play_state_callbacks
+    play_state_callbacks = PlayStateCallbacks('play_state_callbacks', logger, context=player_ctrl.mpd_lock)
 
     # Update mpc library
     library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)

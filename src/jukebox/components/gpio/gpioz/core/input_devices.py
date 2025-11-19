@@ -420,7 +420,7 @@ class RotaryEncoder(NameMixin):
 
     def set_rpc_actions(self, action_config):
         self.on_rotate_clockwise = self._decode_rpc_action('on_rotate_clockwise', action_config)
-        self.on_rotate_counter_clockwise = self._decode_rpc_action('on_rotate_counter_clockwise', action_config)
+        self.on_rotate_counter_clockwise = self._decode_rpc_action('on_rotate_counter_clockwise', action_config) 
 
     def close(self):
         """
