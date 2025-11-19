@@ -280,37 +280,38 @@ class PlayerMPD:
         except KeyError:
             pass
         publishing.get_publisher().send('playerstatus', self.mpd_status)
-            
-        if self.mpd_status['state'] == 'stop':
-            # Run pause_led_off_callback()
-            # Run next_led_off_callback()
-            # Run prev_led_off_callback()
-            pass
 
         # If any important states have changed, run the callbacks.
         logger.debug(f"{self.last_commands}")
-        else:
-            if 'toggle' in self.last_commands:
-                if self.mpd_status['state'] == 'pause':
-                    # Run pause_led_blink_callback()
-                    pass
-                elif self.mpd_status['state'] == 'play':
-                    # Run pause_led_on_callback()
-                    pass
-            elif 'play' in self.last_commands:
-                # Run pause_led_on_callback()
-                pass
-            elif 'pause' in self.last_commands:
-                # Run pause_led_blink_callback()
-                pass
+            
+        # if self.mpd_status['state'] == 'stop':
+        #     # Run pause_led_off_callback()
+        #     # Run next_led_off_callback()
+        #     # Run prev_led_off_callback()
+        #     pass
 
-            if 'next' in in self.last_commands:
-                # Run next_led_blink 3_times_callback()
-                pass
+        # else:
+        #     if 'toggle' in self.last_commands:
+        #         if self.mpd_status['state'] == 'pause':
+        #             # Run pause_led_blink_callback()
+        #             pass
+        #         elif self.mpd_status['state'] == 'play':
+        #             # Run pause_led_on_callback()
+        #             pass
+        #     elif 'play' in self.last_commands:
+        #         # Run pause_led_on_callback()
+        #         pass
+        #     elif 'pause' in self.last_commands:
+        #         # Run pause_led_blink_callback()
+        #         pass
 
-            if 'prev' in self.last_commands
-                # Run prev_led_blink 3_times_callback()
-                pass
+        #     if 'next' in in self.last_commands:
+        #         # Run next_led_blink 3_times_callback()
+        #         pass
+
+        #     if 'prev' in self.last_commands
+        #         # Run prev_led_blink 3_times_callback()
+        #         pass
 
         # Clear the deque
         self.last_commands.clear()
@@ -368,6 +369,7 @@ class PlayerMPD:
     @plugs.tag
     def prev(self):
         self.last_commands.append(inspect.currentframe().f_code.co_name)
+        play_state_callbacks.run_callbacks('prev')
         logger.debug("Prev")
         with self.mpd_lock:
             self.mpd_client.previous()
@@ -375,6 +377,7 @@ class PlayerMPD:
     @plugs.tag
     def next(self):
         self.last_commands.append(inspect.currentframe().f_code.co_name)
+        play_state_callbacks.run_callbacks('next')
         """Play next track in current playlist"""
         logger.debug("Next")
         with self.mpd_lock:
@@ -410,7 +413,7 @@ class PlayerMPD:
         """Toggle pause state, i.e. do a pause / resume depending on current state"""
         self.last_commands.append(inspect.currentframe().f_code.co_name)
 
-        play_state_callbacks.run_callbacks('pause')
+        play_state_callbacks.run_callbacks('toggle')
         with self.mpd_lock:
             self.mpd_client.pause()
 
@@ -785,7 +788,7 @@ def initialize():
     global play_card_callbacks
     play_card_callbacks = PlayContentCallbacks[PlayCardState]('play_card_callbacks', logger, context=player_ctrl.mpd_lock)
 
-   global play_state_callbacks
+    global play_state_callbacks
     play_state_callbacks = PlayStateCallbacks('play_state_callbacks', logger, context=player_ctrl.mpd_lock)
 
     # Update mpc library

@@ -94,7 +94,7 @@ def register_status_led_callback(device):
     components.gpio.gpioz.plugin.service_is_running_callbacks.register(
         _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
 
-def register_play_led_callback(device):
+def register_prev_next_led_callback(device):
     """
     Turn LED on when music is playing
 
@@ -106,14 +106,20 @@ def register_play_led_callback(device):
     """
 
     def set_status_led(state):
-        if state > 1:
-            device.flash(on_time=0.1, off_time=0.1, n=1, background=True)
-        elif state == 1:
+        logger.debug(f"State: {state}")
+        if state in ['prev', 'next']:
+            device.flash(on_time=0.15, off_time=0.15, n=3, background=True)
+            device.on()
+        # elif state == 1:
+        #     device.on()
+        
+        if state in ['pause']:
+            device.flash(on_time=0.5, off_time=0.5, n=2, background=True)
             device.on()
         else:
-            device.off()
+            device.on()
 
-    components.volume.pulse_control.on_output_change_callbacks.register(
+    components.playermpd.play_state_callbacks.register(
         _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
 
 
