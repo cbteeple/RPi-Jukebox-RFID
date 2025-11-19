@@ -282,10 +282,7 @@ class PlayerMPD:
         publishing.get_publisher().send('playerstatus', self.mpd_status)
 
         # If any important states have changed, run the callbacks.
-        logger.debug(f"{self.last_commands}")
-
         new_started = None
-            
         if self.mpd_status['state'] == 'stop':
             play_state_callbacks.run_callbacks('stop')
 
@@ -320,6 +317,7 @@ class PlayerMPD:
         # Clear the deque
         self.last_commands.clear()
 
+        # Enabled delayed continuation commands to be sent to callbacks
         if new_started is not None:
             self.last_commands.append(f'continue_{new_started}')
 
