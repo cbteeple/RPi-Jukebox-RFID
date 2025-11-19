@@ -294,6 +294,9 @@
   * [BUZZ\_TONE](#components.gpio.gpioz.plugin.connectivity.BUZZ_TONE)
   * [register\_rfid\_callback](#components.gpio.gpioz.plugin.connectivity.register_rfid_callback)
   * [register\_status\_led\_callback](#components.gpio.gpioz.plugin.connectivity.register_status_led_callback)
+  * [register\_prev\_led\_callback](#components.gpio.gpioz.plugin.connectivity.register_prev_led_callback)
+  * [register\_next\_led\_callback](#components.gpio.gpioz.plugin.connectivity.register_next_led_callback)
+  * [register\_play\_pause\_led\_callback](#components.gpio.gpioz.plugin.connectivity.register_play_pause_led_callback)
   * [register\_status\_buzzer\_callback](#components.gpio.gpioz.plugin.connectivity.register_status_buzzer_callback)
   * [register\_status\_tonalbuzzer\_callback](#components.gpio.gpioz.plugin.connectivity.register_status_tonalbuzzer_callback)
   * [register\_audio\_sink\_change\_callback](#components.gpio.gpioz.plugin.connectivity.register_audio_sink_change_callback)
@@ -334,6 +337,7 @@
   * [PlayerMPD](#components.playermpd.PlayerMPD)
     * [mpd\_retry\_with\_mutex](#components.playermpd.PlayerMPD.mpd_retry_with_mutex)
     * [pause](#components.playermpd.PlayerMPD.pause)
+    * [prev](#components.playermpd.PlayerMPD.prev)
     * [next](#components.playermpd.PlayerMPD.next)
     * [rewind](#components.playermpd.PlayerMPD.rewind)
     * [replay](#components.playermpd.PlayerMPD.replay)
@@ -352,6 +356,9 @@
   * [PlayContentCallbacks](#components.playermpd.playcontentcallback.PlayContentCallbacks)
     * [register](#components.playermpd.playcontentcallback.PlayContentCallbacks.register)
     * [run\_callbacks](#components.playermpd.playcontentcallback.PlayContentCallbacks.run_callbacks)
+  * [PlayStateCallbacks](#components.playermpd.playcontentcallback.PlayStateCallbacks)
+    * [register](#components.playermpd.playcontentcallback.PlayStateCallbacks.register)
+    * [run\_callbacks](#components.playermpd.playcontentcallback.PlayStateCallbacks.run_callbacks)
 * [components.publishing](#components.publishing)
   * [republish](#components.publishing.republish)
 * [components.volume](#components.volume)
@@ -4617,6 +4624,57 @@ Compatible devices:
 * :class:`components.gpio.gpioz.core.output_devices.RGBLED`
 
 
+<a id="components.gpio.gpioz.plugin.connectivity.register_prev_led_callback"></a>
+
+#### register\_prev\_led\_callback
+
+```python
+def register_prev_led_callback(device)
+```
+
+Blink LED when previous button is pressed.
+
+Compatible devices:
+
+* :class:`components.gpio.gpioz.core.output_devices.LED`
+* :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+* :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+
+
+<a id="components.gpio.gpioz.plugin.connectivity.register_next_led_callback"></a>
+
+#### register\_next\_led\_callback
+
+```python
+def register_next_led_callback(device)
+```
+
+Blink LED when previous button is pressed.
+
+Compatible devices:
+
+* :class:`components.gpio.gpioz.core.output_devices.LED`
+* :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+* :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+
+
+<a id="components.gpio.gpioz.plugin.connectivity.register_play_pause_led_callback"></a>
+
+#### register\_play\_pause\_led\_callback
+
+```python
+def register_play_pause_led_callback(device)
+```
+
+Blink LED forever when paused, and light up when playing.
+
+Compatible devices:
+
+* :class:`components.gpio.gpioz.core.output_devices.LED`
+* :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+* :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+
+
 <a id="components.gpio.gpioz.plugin.connectivity.register_status_buzzer_callback"></a>
 
 #### register\_status\_buzzer\_callback
@@ -5165,6 +5223,18 @@ This is what you want as card removal action: pause the playback, so it can be r
 on the reader again. What happens on re-placement depends on configured second swipe option
 
 
+<a id="components.playermpd.PlayerMPD.prev"></a>
+
+#### prev
+
+```python
+@plugs.tag
+def prev()
+```
+
+Play previous track in current playlist
+
+
 <a id="components.playermpd.PlayerMPD.next"></a>
 
 #### next
@@ -5199,6 +5269,8 @@ Note: Will not re-read folder config, but leave settings untouched
 @plugs.tag
 def replay()
 ```
+
+s
 
 Re-start playing the last-played folder
 
@@ -5404,6 +5476,46 @@ Callback signature is
 
 ```python
 def run_callbacks(folder: str, state: STATE)
+```
+
+
+
+<a id="components.playermpd.playcontentcallback.PlayStateCallbacks"></a>
+
+## PlayStateCallbacks Objects
+
+```python
+class PlayStateCallbacks(CallbackHandler)
+```
+
+Callbacks are executed in various play functions
+
+
+<a id="components.playermpd.playcontentcallback.PlayStateCallbacks.register"></a>
+
+#### register
+
+```python
+def register(func: Callable[[str], None])
+```
+
+Add a new callback function :attr:`func`.
+
+Callback signature is
+
+.. py:function:: func(state: str)
+    :noindex:
+
+**Arguments**:
+
+- `state`: indicator of the state inside the calling
+
+<a id="components.playermpd.playcontentcallback.PlayStateCallbacks.run_callbacks"></a>
+
+#### run\_callbacks
+
+```python
+def run_callbacks(state: str)
 ```
 
 

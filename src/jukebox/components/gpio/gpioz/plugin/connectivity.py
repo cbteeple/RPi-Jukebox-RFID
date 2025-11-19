@@ -94,9 +94,9 @@ def register_status_led_callback(device):
     components.gpio.gpioz.plugin.service_is_running_callbacks.register(
         _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
 
-def register_prev_next_led_callback(device):
+def register_prev_led_callback(device):
     """
-    Turn LED on when music is playing
+    Blink LED when previous button is pressed.
 
     Compatible devices:
 
@@ -107,15 +107,63 @@ def register_prev_next_led_callback(device):
 
     def set_status_led(state):
         logger.debug(f"State: {state}")
-        if state in ['prev', 'next']:
-            device.flash(on_time=0.15, off_time=0.15, n=3, background=True)
+        if state in ['prev']:
+            device.flash(on_time=0.125, off_time=0.125, n=3, background=True)
+        elif state in ['stop']:
+            device.off()
+        elif state in ['play_new']:
+            device.flash(on_time=0.125, off_time=0.125, n=3, background=True)
+        else:
             device.on()
-        # elif state == 1:
-        #     device.on()
-        
+
+    components.playermpd.play_state_callbacks.register(
+        _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
+
+def register_next_led_callback(device):
+    """
+    Blink LED when previous button is pressed.
+
+    Compatible devices:
+
+    * :class:`components.gpio.gpioz.core.output_devices.LED`
+    * :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+    * :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+    """
+
+    def set_status_led(state):
+        logger.debug(f"State: {state}")
+        if state in ['next']:
+            device.flash(on_time=0.125, off_time=0.125, n=3, background=True)
+        elif state in ['stop']:
+            device.off()
+        elif state in ['play_new']:
+            device.flash(on_time=0.125, off_time=0.125, n=3, background=True)
+        else:
+            device.on()
+
+    components.playermpd.play_state_callbacks.register(
+        _check_device_type(device, [LED, PWMLED, RGBLED], set_status_led))
+
+
+def register_play_pause_led_callback(device):
+    """
+    Blink LED forever when paused, and light up when playing.
+
+    Compatible devices:
+
+    * :class:`components.gpio.gpioz.core.output_devices.LED`
+    * :class:`components.gpio.gpioz.core.output_devices.PWMLED`
+    * :class:`components.gpio.gpioz.core.output_devices.RGBLED`
+    """
+
+    def set_status_led(state):
+        logger.debug(f"State: {state}")
         if state in ['pause']:
-            device.flash(on_time=0.5, off_time=0.5, n=2, background=True)
-            device.on()
+            device.flash(on_time=0.5, off_time=0.5, n=None, background=True)
+        elif state in ['stop']:
+            device.off()
+        elif state in ['play_new']:
+            device.flash(on_time=0.125, off_time=0.125, n=3, background=True)
         else:
             device.on()
 

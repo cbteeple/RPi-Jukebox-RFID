@@ -283,38 +283,45 @@ class PlayerMPD:
 
         # If any important states have changed, run the callbacks.
         logger.debug(f"{self.last_commands}")
+
+        new_started = None
             
-        # if self.mpd_status['state'] == 'stop':
-        #     # Run pause_led_off_callback()
-        #     # Run next_led_off_callback()
-        #     # Run prev_led_off_callback()
-        #     pass
+        if self.mpd_status['state'] == 'stop':
+            play_state_callbacks.run_callbacks('stop')
 
-        # else:
-        #     if 'toggle' in self.last_commands:
-        #         if self.mpd_status['state'] == 'pause':
-        #             # Run pause_led_blink_callback()
-        #             pass
-        #         elif self.mpd_status['state'] == 'play':
-        #             # Run pause_led_on_callback()
-        #             pass
-        #     elif 'play' in self.last_commands:
-        #         # Run pause_led_on_callback()
-        #         pass
-        #     elif 'pause' in self.last_commands:
-        #         # Run pause_led_blink_callback()
-        #         pass
+        else:
+            if 'toggle' in self.last_commands:
+                if self.mpd_status['state'] == 'pause':
+                    play_state_callbacks.run_callbacks('pause')
+                elif self.mpd_status['state'] == 'play':
+                    play_state_callbacks.run_callbacks('play')
 
-        #     if 'next' in in self.last_commands:
-        #         # Run next_led_blink 3_times_callback()
-        #         pass
+            elif 'play' in self.last_commands:
+                play_state_callbacks.run_callbacks('play')
+            elif 'pause' in self.last_commands:
+                play_state_callbacks.run_callbacks('pause')
 
-        #     if 'prev' in self.last_commands
-        #         # Run prev_led_blink 3_times_callback()
-        #         pass
+            if 'next' in self.last_commands:
+                play_state_callbacks.run_callbacks('next')
+
+            if 'prev' in self.last_commands:
+                play_state_callbacks.run_callbacks('prev')
+
+            if 'play_new' in self.last_commands:
+                play_state_callbacks.run_callbacks('play_new')
+                new_started = 0
+            
+            if 'continue_0' in self.last_commands:
+                new_started = 1
+            
+            if 'continue_1' in self.last_commands:
+                play_state_callbacks.run_callbacks('continue')
 
         # Clear the deque
         self.last_commands.clear()
+
+        if new_started is not None:
+            self.last_commands.append(f'continue_{new_started}')
 
 
     # MPD can play absolute paths but can find songs in its database only by relative path
@@ -368,17 +375,18 @@ class PlayerMPD:
 
     @plugs.tag
     def prev(self):
+        """Play previous track in current playlist"""
         self.last_commands.append(inspect.currentframe().f_code.co_name)
-        play_state_callbacks.run_callbacks('prev')
+        #play_state_callbacks.run_callbacks('prev')
         logger.debug("Prev")
         with self.mpd_lock:
             self.mpd_client.previous()
 
     @plugs.tag
     def next(self):
-        self.last_commands.append(inspect.currentframe().f_code.co_name)
-        play_state_callbacks.run_callbacks('next')
         """Play next track in current playlist"""
+        self.last_commands.append(inspect.currentframe().f_code.co_name)
+        #play_state_callbacks.run_callbacks('next')s
         logger.debug("Next")
         with self.mpd_lock:
             self.mpd_client.next()
@@ -400,7 +408,7 @@ class PlayerMPD:
 
     @plugs.tag
     def replay(self):
-        """
+        """s
         Re-start playing the last-played folder
 
         Will reset settings to folder config"""
@@ -413,7 +421,6 @@ class PlayerMPD:
         """Toggle pause state, i.e. do a pause / resume depending on current state"""
         self.last_commands.append(inspect.currentframe().f_code.co_name)
 
-        play_state_callbacks.run_callbacks('toggle')
         with self.mpd_lock:
             self.mpd_client.pause()
 
@@ -515,6 +522,7 @@ class PlayerMPD:
 
     @plugs.tag
     def play_single(self, song_url):
+        self.last_commands.append('play_new')
         with self.mpd_lock:
             self.mpd_client.clear()
             self.mpd_client.addid(song_url)
@@ -522,6 +530,7 @@ class PlayerMPD:
 
     @plugs.tag
     def resume(self):
+        self.last_commands.append('play')
         with self.mpd_lock:
             songpos = self.current_folder_status["CURRENTSONGPOS"]
             elapsed = self.current_folder_status["ELAPSED"]
@@ -558,7 +567,7 @@ class PlayerMPD:
 
             # run callbacks before second_swipe_action is invoked
             play_card_callbacks.run_callbacks(folder, PlayCardState.secondSwipe)
-
+            self.last_commands.append('play_new')
             self.second_swipe_action()
         else:
             logger.debug('Calling first swipe action')
@@ -636,6 +645,7 @@ class PlayerMPD:
         :param recursive: Add folder recursively
         """
         # TODO: This changes the current state -> Need to save last state
+        self.last_commands.append('play_new')
         with self.mpd_lock:
             logger.info(f"Play folder: '{folder}'")
             self.mpd_client.clear()
@@ -670,6 +680,7 @@ class PlayerMPD:
         :param albumartist: Artist of the Album provided by MPD database
         :param album: Album name provided by MPD database
         """
+        self.last_commands.append('play_new')
         with self.mpd_lock:
             logger.info(f"Play album: '{album}' by '{albumartist}")
             self.mpd_client.clear()
