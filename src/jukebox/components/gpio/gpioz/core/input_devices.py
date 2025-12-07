@@ -13,12 +13,13 @@ For examples how to use the devices from the configuration files, see
 [GPIO: Input Devices](../../builders/gpio.md#input-devices).
 """
 
-from colletions import deque
+from collections import deque
 
 import functools
 import threading
 from enum import Enum
 from typing import Callable
+import math
 
 import gpiozero
 from abc import ABC, abstractmethod
@@ -379,10 +380,20 @@ class RotaryEncoderManual(NameMixin):
 
     :param name: See #Button
     """
-    def __init__(self, a, b, *, bounce_time=None, pin_factory=None, name=None):
+    # State transition table (Gray code: 00, 01, 11, 10)
+    # Each row is current state, each column is next state
+    # 0 = No movement, 1 = Clockwise, -1 = Counter-clockwise
+    TRANSITION_TABLE = [
+        [0, 1, -1, 0],  # State 00
+        [-1, 0, 0, 1],  # State 01
+        [1, 0, 0, -1],  # State 11
+        [0, -1, 1, 0]   # State 10
+    ]
+
+    def __init__(self, a, b, *, bounce_time=None, pin_factory=None, name=None, quadrature_factor=2):
         super().__init__(name=name)
 
-        self.states = [deque([0,0], maxlen=2), deque([0,0], maxlen=2)]
+        self.quadrature_factor = quadrature_factor
         self.when_rotated_clockwise = lambda: None
         self.when_rotated_counter_clockwise = lambda: None
 
@@ -394,33 +405,56 @@ class RotaryEncoderManual(NameMixin):
             b, pull_up=True, active_state=None,
             bounce_time=bounce_time, pin_factory=pin_factory)
 
-        # Register each leg of the encoder separately 
-        self._side_a.when_pressed = lambda: self.register_pulse_state(0, True)
-        self._side_a.when_released = lambda: self.register_pulse_state(0, False)
+        # Initialize state by reading current pin values
+        self.last_state = (self._side_a.value << 1) | self._side_b.value
+        self._steps = 0
 
-        self._side_b.when_pressed = lambda: self.register_pulse_state(1, True)
-        self._side_b.when_released = lambda: self.register_pulse_state(1, False)
+        self._side_a.when_pressed = self.transition_occurred
+        self._side_a.when_released = self.transition_occurred
 
-    def register_pulse_state(leg_id, state):
-        """
-        Add a pulse state, update values, and perform callbacks 
-        """
-        self.states[leg_id].append(state)
-        logger.debug("Pulse State: {}".format(self.states))
+        self._side_b.when_pressed = self.transition_occurred
+        self._side_b.when_released = self.transition_occurred
+
+    def transition_occurred(self):
+        # Read current pin states (00, 01, 10, or 11)
+        current_state = (self._side_a.value << 1) | self._side_b.value
+        
+        if current_state != self.last_state:
+            # Look up movement in transition table
+            movement = self.TRANSITION_TABLE[self.last_state][current_state]
+            self._steps += movement
+            self.last_state = current_state
+            self.callback(movement)
+
+    def callback(self, movement=0):
+        if self._steps % self.quadrature_factor == 0: 
+            if movement > 0:
+                self.when_rotated_clockwise()
+            elif movement < 0:
+                self.when_rotated_counter_clockwise()
+
+
+    @property
+    def steps(self):
+        if self._steps > 0:
+            return math.floor(self._steps/self.quadrature_factor)
+
+        if self._steps < 0:
+            return math.ceil(self._steps/self.quadrature_factor)
 
     @property
     def pin_a(self):
         """
         Returns the underlying pin A
         """
-        return self._rotary.a.pin
+        return self._side_a.pin
 
     @property
     def pin_b(self):
         """
         Returns the underlying pin B
         """
-        return self._rotary.b.pin
+        return self._side_b.pin
 
     @property
     def on_rotate_clockwise(self):
@@ -446,7 +480,7 @@ class RotaryEncoderManual(NameMixin):
 
     def set_rpc_actions(self, action_config):
         self.on_rotate_clockwise = self._decode_rpc_action('on_rotate_clockwise', action_config)
-        self.on_rotate_counter_clockwise = self._decode_rpc_action('on_rotate_counter_clockwise', action_config) 
+        self.on_rotate_counter_clockwise = self._decode_rpc_action('on_rotate_counter_clockwise', action_config)
 
     def close(self):
         """
