@@ -13,6 +13,8 @@ For examples how to use the devices from the configuration files, see
 [GPIO: Input Devices](../../builders/gpio.md#input-devices).
 """
 
+from colletions import deque
+
 import functools
 import threading
 from enum import Enum
@@ -367,6 +369,93 @@ class ShortLongPressButton(NameMixin, ButtonBase):
         self.on_long_press = self._decode_rpc_action('on_long_press', action_config)
 
 
+class RotaryEncoderManual(NameMixin):
+    """
+    A rotary encoder to run one of two actions depending on the rotation direction.
+
+    :param bounce_time: See #Button
+
+    :param pin_factory: See #Button
+
+    :param name: See #Button
+    """
+    def __init__(self, a, b, *, bounce_time=None, pin_factory=None, name=None):
+        super().__init__(name=name)
+
+        self.states = [deque([0,0], maxlen=2), deque([0,0], maxlen=2)]
+        self.when_rotated_clockwise = lambda: None
+        self.when_rotated_counter_clockwise = lambda: None
+
+        self._side_a = gpiozero.Button(
+            a, pull_up=True, active_state=None,
+            bounce_time=bounce_time, pin_factory=pin_factory)
+
+        self._side_b = gpiozero.Button(
+            b, pull_up=True, active_state=None,
+            bounce_time=bounce_time, pin_factory=pin_factory)
+
+        # Register each leg of the encoder separately 
+        self._side_a.when_pressed = lambda: self.register_pulse_state(0, True)
+        self._side_a.when_released = lambda: self.register_pulse_state(0, False)
+
+        self._side_b.when_pressed = lambda: self.register_pulse_state(1, True)
+        self._side_b.when_released = lambda: self.register_pulse_state(1, False)
+
+    def register_pulse_state(leg_id, state):
+        """
+        Add a pulse state, update values, and perform callbacks 
+        """
+        self.states[leg_id].append(state)
+        logger.debug("Pulse State: {}".format(self.states))
+
+    @property
+    def pin_a(self):
+        """
+        Returns the underlying pin A
+        """
+        return self._rotary.a.pin
+
+    @property
+    def pin_b(self):
+        """
+        Returns the underlying pin B
+        """
+        return self._rotary.b.pin
+
+    @property
+    def on_rotate_clockwise(self):
+        """
+        The function to run when the encoder is rotated clockwise
+        """
+        return self.when_rotated_clockwise
+
+    @on_rotate_clockwise.setter
+    def on_rotate_clockwise(self, func: Callable):
+        self.when_rotated_clockwise = func
+
+    @property
+    def on_rotate_counter_clockwise(self):
+        """
+        The function to run when the encoder is rotated counter clockwise
+        """
+        return self.when_rotated_counter_clockwise
+
+    @on_rotate_counter_clockwise.setter
+    def on_rotate_counter_clockwise(self, func: Callable):
+        self.when_rotated_counter_clockwise = func
+
+    def set_rpc_actions(self, action_config):
+        self.on_rotate_clockwise = self._decode_rpc_action('on_rotate_clockwise', action_config)
+        self.on_rotate_counter_clockwise = self._decode_rpc_action('on_rotate_counter_clockwise', action_config) 
+
+    def close(self):
+        """
+        Close the devices and release the pins
+        """
+        self._side_a.close()
+        self._side_b.close()
+
+
 class RotaryEncoder(NameMixin):
     """
     A rotary encoder to run one of two actions depending on the rotation direction.
@@ -381,6 +470,11 @@ class RotaryEncoder(NameMixin):
         super().__init__(name=name)
         self._rotary = gpiozero.RotaryEncoder(a, b, bounce_time=bounce_time, pin_factory=pin_factory,
                                               wrap=False, max_steps=16, threshold_steps=(0, 0))
+
+        
+        def rotate_print():
+            logger.debug(self._rotary.value)
+        self._rotary.when_rotated = rotate_print
 
     @property
     def pin_a(self):
