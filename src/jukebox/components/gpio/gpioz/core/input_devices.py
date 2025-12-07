@@ -13,8 +13,6 @@ For examples how to use the devices from the configuration files, see
 [GPIO: Input Devices](../../builders/gpio.md#input-devices).
 """
 
-from collections import deque
-
 import functools
 import threading
 from enum import Enum
@@ -370,15 +368,21 @@ class ShortLongPressButton(NameMixin, ButtonBase):
         self.on_long_press = self._decode_rpc_action('on_long_press', action_config)
 
 
-class RotaryEncoderManual(NameMixin):
+class RotaryEncoderConfigurable(NameMixin):
     """
-    A rotary encoder to run one of two actions depending on the rotation direction.
+    A rotary encoder to run one of two actions depending on the rotation direction. 
 
     :param bounce_time: See #Button
 
     :param pin_factory: See #Button
 
     :param name: See #Button
+
+    :param quadrature_factor: The type of quadrature encoding to use. A value
+        of 1 increments the value on every pin transition. A value of 2
+        increments the value on every-other transition, and 4 increments the
+        value once for every full quadrature cycle (equivalent to the basic 
+        behavior of the RotaryEncoder class).
     """
     # State transition table (Gray code: 00, 01, 11, 10)
     # Each row is current state, each column is next state
