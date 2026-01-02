@@ -5,6 +5,7 @@ import alsaaudio
 import logging
 import wave
 import os
+import time
 import jukebox.cfghandler
 import jukebox.plugs as plugin
 
@@ -42,6 +43,11 @@ class AlsaWave:
             while data:
                 device.write(data)
                 data = f.readframes(period_size)
+
+            # Wait until the file has been completely played.
+            duration = f.getnframes() / f.getframerate()
+            logger.debug(f"Wav file is {duration} sec long")
+            time.sleep(duration)
 
     @plugin.tag
     def play(self, filename):
