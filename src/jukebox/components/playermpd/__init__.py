@@ -245,6 +245,7 @@ class PlayerMPD:
         with self.mpd_lock:
             try:
                 value = mpd_cmd(*args)
+            #except Unicode
             except Exception as e:
                 logger.error(f"{e.__class__.__qualname__}: {e}")
                 value = None
