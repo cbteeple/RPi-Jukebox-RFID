@@ -66,6 +66,7 @@ const JUKEBOX_ACTIONS_MAP = {
   timers: {
     commands: {
       timer_shutdown: {},
+      timer_auto_shutdown: {},
       timer_stop_player: {},
       timer_fade_volume: {},
     }

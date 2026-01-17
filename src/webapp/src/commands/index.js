@@ -197,6 +197,22 @@ const commands = {
     method: 'start',
     argKeys: ['wait_seconds'],
   },
+  'timer_auto_shutdown.cancel': {
+    _package: 'timers',
+    plugin: 'timer_auto_shutdown',
+    method: 'cancel',
+  },
+  'timer_auto_shutdown.get_state': {
+    _package: 'timers',
+    plugin: 'timer_auto_shutdown',
+    method: 'get_state',
+  },
+  'timer_auto_shutdown': {
+    _package: 'timers',
+    plugin: 'timer_auto_shutdown',
+    method: 'start',
+    argKeys: ['wait_seconds'],
+  },
   'timer_stop_player.cancel': {
     _package: 'timers',
     plugin: 'timer_stop_player',

@@ -43,6 +43,7 @@ class VolumeFadeOutActionClass:
 # ---------------------------------------------------------------------------
 # Create the timers
 # ---------------------------------------------------------------------------
+timer_auto_shutdown: GenericTimerClass
 timer_shutdown: GenericTimerClass
 timer_stop_player: GenericTimerClass
 timer_fade_volume: GenericMultiTimerClass
@@ -61,6 +62,15 @@ def finalize():
     # Note: Since timer_shutdown is an instance of a class from a different module,
     # auto-registration would register it with that module. Manually set package to this plugin module
     plugin.register(timer_shutdown, name='timer_shutdown', package=plugin.loaded_as(__name__))
+
+    global timer_auto_shutdown
+    timeout = cfg.setndefault('timers', 'auto_shutdown', 'default_timeout_sec', value=10 * 60)
+    timer_auto_shutdown = GenericTimerClass(f"{plugin.loaded_as(__name__)}.timer_auto_shutdown",
+                                       timeout, shutdown)
+    timer_auto_shutdown.__doc__ = "Timer for automatic shutdown (separate from the one you can manually set)"
+    # Note: Since timer_auto_shutdown is an instance of a class from a different module,
+    # auto-registration would register it with that module. Manually set package to this plugin module
+    plugin.register(timer_auto_shutdown, name='timer_auto_shutdown', package=plugin.loaded_as(__name__))
 
     global timer_stop_player
     timeout = cfg.setndefault('timers', 'stop_player', 'default_timeout_sec', value=60 * 60)
