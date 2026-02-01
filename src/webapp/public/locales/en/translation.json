@@ -19,6 +19,7 @@
           "reboot": "Reboot",
           "say_my_ip": "Say IP address",
           "timer_shutdown": "Shut Down",
+          "timer_auto_shutdown": "Auto Shut Down",
           "timer_stop_player": "Stop player",
           "timer_fade_volume": "Fade volume",
           "toggle_output": "Toggle audio output",
@@ -225,6 +226,7 @@
       "title": "Timers",
       "stop-player": "Stop player",
       "shutdown": "Shut Down",
+      "auto-shutdown": "Auto Shutdown",
       "fade-volume": "Fade volume",
       "idle-shutdown": "Idle Shut Down",
       "ended": "Done"

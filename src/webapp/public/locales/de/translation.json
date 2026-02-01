@@ -19,6 +19,7 @@
           "reboot": "Neustarten",
           "say_my_ip": "IP Addresse vorlesen",
           "timer_shutdown": "Shut Down",
+          "timer_auto_shutdown": "Auto Shut Down",
           "timer_stop_player": "Stop player",
           "timer_fade_volume": "Fade volume",
           "toggle_output": "Audio-Ausgang umschalten",

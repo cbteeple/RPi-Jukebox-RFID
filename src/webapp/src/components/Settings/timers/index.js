@@ -29,6 +29,7 @@ const SettingsTimers = () => {
           direction="column"
           sx={{ '& > .MuiGrid-root:not(:last-child)': spacer }}
         >
+          <Timer type={'auto-shutdown'} />
           <Timer type={'shutdown'} />
           <Timer type={'stop-player'} />
           <Timer type={'fade-volume'} />
