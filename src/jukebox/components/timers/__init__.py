@@ -5,6 +5,7 @@ from jukebox.multitimer import (GenericTimerClass, GenericMultiTimerClass)
 import logging
 import jukebox.cfghandler
 import jukebox.plugs as plugin
+import components.playermpd
 
 
 logger = logging.getLogger('jb.timers')
@@ -71,6 +72,23 @@ def finalize():
     # Note: Since timer_auto_shutdown is an instance of a class from a different module,
     # auto-registration would register it with that module. Manually set package to this plugin module
     plugin.register(timer_auto_shutdown, name='timer_auto_shutdown', package=plugin.loaded_as(__name__))
+
+    # Register a callback function to start/stop the auto shutdown timer.
+    def timer_callback(command):
+        global timer_auto_shutdown
+
+        if command == 'cancel':
+            logger.info(f"Cancelling Auto Shutdown Timer with {timer_auto_shutdown.get_state()['remaining_seconds']} sec left to go")
+            timer_auto_shutdown.cancel()
+
+        if command == 'start':
+            logger.info(f"Starting Auto Shutdown Timer: {timer_auto_shutdown.get_state()['remaining_seconds']} sec to go")
+            timer_auto_shutdown.start()
+
+    timer_auto_shutdown.start()
+
+    components.playermpd.auto_shutdown_timer_callbacks.register(timer_callback)
+    
 
     global timer_stop_player
     timeout = cfg.setndefault('timers', 'stop_player', 'default_timeout_sec', value=60 * 60)

@@ -286,18 +286,23 @@ class PlayerMPD:
         new_started = None
         if self.mpd_status['state'] == 'stop':
             play_state_callbacks.run_callbacks('stop')
+            auto_shutdown_timer_callbacks.run_callbacks('start')
 
         else:
             if 'toggle' in self.last_commands:
                 if self.mpd_status['state'] == 'pause':
                     play_state_callbacks.run_callbacks('pause')
+                    auto_shutdown_timer_callbacks.run_callbacks('start')
                 elif self.mpd_status['state'] == 'play':
                     play_state_callbacks.run_callbacks('play')
+                    auto_shutdown_timer_callbacks.run_callbacks('cancel')
 
             elif 'play' in self.last_commands:
                 play_state_callbacks.run_callbacks('play')
+                auto_shutdown_timer_callbacks.run_callbacks('cancel')
             elif 'pause' in self.last_commands:
                 play_state_callbacks.run_callbacks('pause')
+                auto_shutdown_timer_callbacks.run_callbacks('start')
 
             if 'next' in self.last_commands:
                 play_state_callbacks.run_callbacks('next')
@@ -307,6 +312,7 @@ class PlayerMPD:
 
             if 'play_new' in self.last_commands:
                 play_state_callbacks.run_callbacks('play_new')
+                auto_shutdown_timer_callbacks.run_callbacks('cancel')
                 new_started = 0
             
             if 'continue_0' in self.last_commands:
@@ -787,6 +793,7 @@ player_ctrl: PlayerMPD
 #: See :class:`PlayContentCallbacks`
 play_card_callbacks: PlayContentCallbacks[PlayCardState]
 play_state_callbacks: PlayStateCallbacks
+auto_shutdown_timer_callbacks: PlayStateCallbacks
 
 
 @plugs.initialize
@@ -800,6 +807,9 @@ def initialize():
 
     global play_state_callbacks
     play_state_callbacks = PlayStateCallbacks('play_state_callbacks', logger, context=player_ctrl.mpd_lock)
+
+    global auto_shutdown_timer_callbacks
+    auto_shutdown_timer_callbacks = PlayStateCallbacks('auto_shutdown_timer_callbacks', logger, context=player_ctrl.mpd_lock)
 
     # Update mpc library
     library_update = cfg.setndefault('playermpd', 'library', 'update_on_startup', value=True)
