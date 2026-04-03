@@ -348,8 +348,6 @@ class PulseVolumeControl:
             """:meta private:"""
             super().run_callbacks(sink_name, alias, sink_index, error_state)
 
-    volume_map = lambda x: int((float(x)**0.5)*10)
-
     def __init__(self, sink_list: List[PulseAudioSinkClass]):
         self._sink_list: List[PulseAudioSinkClass] = sink_list
         logger.debug(f'Configured audio sinks: {self._sink_list}')
@@ -357,6 +355,7 @@ class PulseVolumeControl:
         self._volume_limit = {x.pulse_sink_name: x.volume_limit / 100.0 for x in self._sink_list}
         self._soft_max_volume = cfg.setndefault('pulse', 'soft_max_volume', value=100)
 
+        self.volume_map = lambda x: int((float(x)**0.5)*10)
         # For both callback handler: We use the context lock only explicitly for registering new functions
         # When the callbacks are run, it happens from inside the pulse_control which an already acquired lock
 
