@@ -60,6 +60,7 @@ The following callbacks are provided. Register callbacks with these adder functi
 """
 import collections
 import logging
+import math
 import threading
 import time
 import traceback
@@ -347,6 +348,8 @@ class PulseVolumeControl:
             """:meta private:"""
             super().run_callbacks(sink_name, alias, sink_index, error_state)
 
+    volume_map = lambda x: int((float(x)**0.5)*10)
+
     def __init__(self, sink_list: List[PulseAudioSinkClass]):
         self._sink_list: List[PulseAudioSinkClass] = sink_list
         logger.debug(f'Configured audio sinks: {self._sink_list}')
@@ -383,7 +386,11 @@ class PulseVolumeControl:
             # Always make sure, we are not muted!
             pulse_inst.mute(sink, mute=False)
             volume = volume * self._volume_limit.get(sink_name, 1)
-            pulse_inst.volume_set_all_chans(sink, volume / 100.0)
+
+            # make volume quadratic
+            new_volume = self.volume_map(volume)
+
+            pulse_inst.volume_set_all_chans(sink, new_volume / 100.0)
         self._publish_volume(pulse_inst)
 
     def _get_volume_and_mute(self, pulse_inst: pulsectl.Pulse, sink_name: Optional[str] = None):
