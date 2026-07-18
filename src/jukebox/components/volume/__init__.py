@@ -387,9 +387,10 @@ class PulseVolumeControl:
             volume = volume * self._volume_limit.get(sink_name, 1)
 
             # make volume quadratic
-            new_volume = self.volume_map(volume)
+            #new_volume = self.volume_map(volume)
+            #pulse_inst.volume_set_all_chans(sink, new_volume / 100.0)
 
-            pulse_inst.volume_set_all_chans(sink, new_volume / 100.0)
+            pulse_inst.volume_set_all_chans(sink, volume / 100.0)
         self._publish_volume(pulse_inst)
 
     def _get_volume_and_mute(self, pulse_inst: pulsectl.Pulse, sink_name: Optional[str] = None):
