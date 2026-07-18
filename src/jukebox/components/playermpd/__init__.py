@@ -80,7 +80,7 @@ sudo -u mpd speaker-test -t wav -c 2
 # Den kann der Leser auch nicht tracken. Der State kann ja auch über die Web App oder Kommandozeile geändert werden.
 # Toggle (und 2nd Swipe generell) ist immer vom Status des Zielsystems abhängig und kann damit nur vom Zielsystem geändert
 # werden. Bei Wifi also braucht man 3 Funktionen: on / off / toggle. Toggle ist dann first swipe / second swipe
-
+import copy
 from collections import deque
 import inspect
 import os
@@ -382,10 +382,27 @@ class PlayerMPD:
     def prev(self):
         """Play previous track in current playlist"""
         self.last_commands.append(inspect.currentframe().f_code.co_name)
-        #play_state_callbacks.run_callbacks('prev')
-        logger.debug("Prev")
-        with self.mpd_lock:
-            self.mpd_client.previous()
+
+        songpos = self.current_folder_status.get("CURRENTSONGPOS", None)
+        elapsed = float(self.current_folder_status.get("ELAPSED", 0.0))
+
+        out_stmt = f"Prev: Elapsed time: {elapsed-1.0} - "
+
+        previous_song = True
+        if (elapsed-1) < 2.0:
+            out_stmt+="Go to previous song"
+            previous_song = True
+        else:
+            out_stmt+="Restart current song"
+            previous_song = False
+
+        logger.debug(out_stmt)
+
+        with self.mpd_lock:    
+            if previous_song:        
+                self.mpd_client.previous()
+            else:
+                self.mpd_client.play(songpos)
 
     @plugs.tag
     def next(self):
