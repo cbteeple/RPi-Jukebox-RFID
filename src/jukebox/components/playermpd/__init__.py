@@ -386,7 +386,7 @@ class PlayerMPD:
         songpos = self.current_folder_status.get("CURRENTSONGPOS", None)
         elapsed = float(self.current_folder_status.get("ELAPSED", 0.0))
 
-        out_stmt = f"Prev: Elapsed time: {elapsed-1.0} - "
+        out_stmt = f"Prev: Elapsed time: {(elapsed-1.0):.2f} - "
 
         previous_song = True
         if (elapsed-1) < 2.0:
